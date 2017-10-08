@@ -1,0 +1,90 @@
+set vSourceData = 'lib://DataFiles/';
+set vSaveQVD  = 'lib://QVD/';
+
+//Initial Load
+//Initial load Script, use this only when you need reload all the records; otherwise, keep this code commented.
+
+// [Sales]:
+// LOAD
+//     OrderID,
+//     ProductID,
+//     CustomerID,
+//     Amount,
+//     Date_updated
+// FROM [$(vSourceData)Orders.xlsx]
+// (ooxml, embedded labels, table is Orders);
+
+
+// store Sales into [$(vSaveQVD)Sales.qvd](qvd);
+
+//Load Main QVD file
+//Load saved Sales QVD to & get latest date updated.
+
+Sales:
+LOAD
+    OrderID,
+    ProductID,
+    CustomerID,
+    Amount,
+    Date(Date_updated) as Date_updated
+FROM [$(vSaveQVD)Sales.qvd](qvd);
+
+Sort_Sales:
+Load *
+Resident Sales
+Order by Date_updated;
+
+Let vUpdateDate = Peek('Date_updated', -1, 'Sort_Sales');
+
+Drop table Sales;
+
+
+
+//Perform Incremental Load
+//load incremental records from new source data
+
+Incremental:
+
+NoConcatenate
+LOAD
+    OrderID,
+    ProductID,
+    CustomerID,
+    Amount,
+    Date(Date_updated) as Date_updated
+FROM [$(vSourceData)Orders.xlsx]
+(ooxml, embedded labels, table is NewOrders)
+
+where Date_updated >= $(vUpdateDate);
+
+
+
+
+//Update Main QVD
+//Concatenate incremental load with previously loaded records by adding new records or replacing updated records.
+
+Concatenate
+LOAD
+    OrderID,
+    ProductID,
+    CustomerID,
+    Amount,
+    Date(Date_updated) as Date_updated
+FROM [$(vSaveQVD)Sales.qvd](qvd)
+where not exists (OrderID);
+
+store Incremental into [$(vSaveQVD)Sales.qvd](qvd);
+
+drop table Incremental;//Incremental load complete, new/undated records and existing records saved to overwrite QVD file.
+
+//check new data
+Sales:
+LOAD
+    OrderID,
+    ProductID,
+    CustomerID,
+    Amount,
+    Date_updated
+FROM [lib://QVD/Sales.qvd]
+(qvd);
+
