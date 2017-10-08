@@ -1,0 +1,355 @@
+Summary of QlikView Notes:
+
+QlikSense includes Production (PROD), UAT/DAV environments.
+
+Production has (3) nodes:
+(1) node Central/Reload Node, (2) nodes Proxy/Engine Nodes.
+QLKMGT01 PROD, Centrel/Reload node
+QLKAPP01 PROD, Proxy/Engine node
+QLKAPP02  PROD, Proxy/Engine node
+
+UAT/DEV has (3) nodes:
+(1) node Central/Reload Node, (2) nodes Proxy/Engine Nodes.
+QLKMGT98 UAT/DEV, Central/Reload node
+QLKAPP98, UAT/DEV, Proxy/Engine node
+QLKAPP99, UAT/DEV, Proxy/Engine node
+https://qliksenseanalytics.snclavalinom.com/hub
+https://qliksenseanalyticsuat.snclavalinom.com/hub
+
+(4) major components:
+QlikView Developer (Desktop)
+QlikView Server (QVS)
+QlikView Publisher (AccessPoint)
+QlikView Clients (Security)
+
+QlikView app security is integrated with ClientConnect Active Directory structure and OBIEE security.
+
+Qlik Document Folder: 1.Reference Documents; 2. Data Model; 3. Spec Documents; 4. Signed Requirements; 5. Signed R2/R3 (Unit and User Acceptance Testing, Unit Test - R2, User Acceptance Test - R3); 6. Others.
+
+if OBIEE security is used: User must have JDE account; must have same JDE login and network login, so network login length must be 10 character or less.
+
+SSIS and QlikView
+SSIS is a platform for data integration and workflow application.
+It features a fast and flexible data warehousing tool used for data extraction, transformation, and loading (ETL). The tool may also be used to automate maintenance of SQL server database and updates to multidimensional cube data.
+
+CUBE: generates a result set that shows aggregates fro all combinations of values in the selected columns. example: select country, gender, sum(salary) from employee group by cube(country, gender).
+
+SSIS package
+*.dtsx, *.conmgr (connection manager file)
+SSIS package (SQL server agent job) push data from one source to sql table, QV reports based on this sql table. command line reload.
+
+Trigger:
+includes Scheduled trigger and task event trigger
+
+QlikView Services:
+DSC@qkvapp01
+QMS@qkvapp01
+QVS@qkvapp01
+QVWS@qkvapp01
+
+pick() function:
+* works like "index" function in Excel;
+* can be used in Script and UI;
+* return the Nth expression/string in the list;
+* first parameter check the position and returns the appropriate expression/string;
+* can avoid the nested IF statement;
+* combination of pick() and match() can be used as switch case statements;
+* dynamic set analysis expression;
+
+match() function:
+* compare a string/field/variable with the string expression;
+* the result of the comparison is integer indicating the match expression;
+* if no value is matched, the 0 is returned;
+* comparison is case-sensitive;
+* work as "switch/case" statement in QV, and subsititution for long IF statement;
+* work as "IN" statement in load script;
+* can be used for customer sorting in expression;
+* sample: load * from... where match(field, p1, p2...)
+
+convert Julian Date:
+in SQL:
+select LEFT(CONVERT(VARCHAR(30), DATEADD(day, (JulianDate - 1 - 1000*ROUND(JulianDate / 1000, 0)), DATEADD(year, ROUND(JulianDate / 1000, 0), '01/01/1900')),120),10) as NewDate FROM ... WHERE...
+
+in QV:
+date(YearStart(MakeDate((((JulianDate-fmod(JulianDate,1000))/1000)+1900)))+(fmod(JulianDate,1000)-1))	as NewDate
+
+Load image to script:
+Images:
+BUNDLE Load * inline
+[
+ImageID, Path
+1, \\...\...1.jpg
+2, \\...\...2.jpg
+3, \\...\...3.jpg
+];
+
+The Having clause in QlikView:
+Load *
+WHERE YearlyIncome > 50000
+;
+Load Avg(YearlyIncome) as YearlyIncome
+	,Education
+Group by Education
+;
+SQL Select *
+FROM...;
+
+=============================================================================================================
+
+Current Year Sales:
+sum({$<Year={'$(=max(Year))'}>}Sales)
+
+or
+
+vVariation = sum({$<Year={'$(=max(Year) - $1)'}>}Sales)
+
+(Actual Year - Previous Year)/Previous Year
+=($(vVariation(0)) - $(vVariation(1))) / $(vVariation(1))
+
+
+Is In YTD:
+if(DayNumberOfYear(Date) <= DayNumberOfYear(Today()),1,0) as IsInYTD
+
+Is In QTD:
+if(DayNumberOfQuarter(Date) <= DayNumberOfQuarter(Today()),1,0) as IsInQTD
+
+Is In MTD:
+if(Day(Date) <= Day(Today()),1,0) as IsInMTD
+
+Is Current Month:
+if(Month(Date) = Month(Today()),1,0) as IsCurrentMonth
+
+Is Last Month:
+if(Month(addmonths(Date, +1)) = Month(Today()),1,0) as IsLastMonth
+
+Sales for this year:
+sum({<Year={$(=year(max(Date)))}>}Sales)
+
+Sales for this week:
+sum({<Year={$(=year(max(Date)))},week={$(=week(max(Date)))}>}Sales)
+
+Sales for last 7 days:
+sum({<Date={"<=$(=max(Date))>=$(=max(Date)-7)"}>}Sales)
+
+Max Profit by Date:
+max(aggr(sum(Profit),Date,Date))
+
+Min Profit by Date:
+min(aggr(sum(Profit),Date,Date))
+
+Max Profit by Country:
+max(aggr(sum(Profit),Date, Country))
+
+Min Profit by Country:
+min(aggr(sum(Profit),Date, Country))
+
+Today Profit:
+sum({$<Date={"$(=Date(today()))"}>}Profit)
+
+Yesterday Profit:
+sum({$<Date={"$(=Date(today()-1))"}>}Profit)
+
+Last 7 days Sales:
+sum({<Date={"<=$(=max(Date))>=$(=max(Date)-7)"}>}Sales)
+
+This Week Sales:
+sum({<Year={$(=Year(Max(Date)))}, Week={$(=Week(Max(Date)))}>}Sales)
+
+This Month Sales:
+sum({<Year={$(=max(Year))}, Month={'$(=Month(Max(Date)))'}>}Sales)
+
+QTD Sales:
+sum(if(InQuarterToDate(Date, Today(),0),Sales))
+0 // current quarter
+-1 // previous quarter
+-4 // same quarter last year
+
+Sales CYTD vs LYTD:
+sum({$<CYTDFlag={1}, Year=, Quarter=, Month=>}Sales) / sum({$<LYTDFlag={1}, Year=, Quarter=, Month=>}Sales)
+
+CMB_KPI_Dashboard:
+=count({$<[KPI_1_WO.Override State]={2},
+[KPI_1_WO.Include In KPI]={1},
+Year={"<=$(=$(vU.Year))"},
+MonthNum={"<=$(=$(vU.MonthNum))"}>}[KPI_1_WO.WorkOrderNumber])
+
+vU.Year = year(addmonths(today(),-2))
+vU.MonthNum = Num(month(addmonths(today(),-2)))
+
+vA.Year = year(addmonths(today(),-1))
+vA.MonthNum = Num(month(addmonths(today(),-1)))
+
+vU.YearMonth = date(makedate(year(addmonths(today(),-2)), month(addmonths(today(),-2))),'YYYYMM')
+vA.YearMonth = date(makedate(year(addmonths(today(),-1)), month(addmonths(today(),-1))),'YYYYMM')
+
+================================================================================================================
+
+weekday(Date(reloadtime(),'DDD'))  return 'Sun'
+date(reloadtime(),'WWWW') return 'Sunday'
+
+Reduce Load:
+First 1000 Load...From...
+
+Reload Time:
+='Reloaded on '&Reloadtime() &chr(10)&floor(now()-reloadtime())&' Days,'&hour(now()-reloadtime())&' Hours and '&minute(now()-reloadtime())& minute(s) ago;'
+='Reloaded on'&date(reloadtime(),'WWWW')
+
+WHERE EXISTS
+Load FACT table (e.g., Transactions)
+
+Load Dimension Table (e.g., Product)
+WHERE EXISTS (Product)
+
+Button to show Top N values:
+='('&concat(if(aggr(rank(sum({1}Sales)), ItemNo) <= N, ItemNo),'|') &')'
+
+Button to show Bottom N values:
+='('&concat(if(aggr(rank(-sum({1}Sales)), ItemNo) <= N, ItemNo),'|') &')'
+
+Set Analysis to show Top N value:
+sum({<ItemNo={"=if(aggr(rank(sum({1}Sales)),ItemNo)<=N, ItemNo)"}>}Sales)
+
+Variables parameters:
+vQty = sum(Quantity)/$1
+>>e.g., $(vQty($1))
+
+vQty = sum(Quantity)/$1 - $2
+>>e.g., $(vQty($1, $2))
+
+eSalesFor = num(sum({<Country={'$1'}>}Amount),'$#,##0')
+>>e.g., $(eSalesFor(Ireland)) 
+>>e.g., $(eSalesFor(*)) -- for all countries.
+
+e.Country.Metric = num(sum({<Country={'$1'}>}$2),'#,##0')
+>>e.g., $(e.Country.Metric(Ireland, Sales))
+
+e.Metric.For = sum($1)&'|'&10000
+>>e.g., $(=$(e.Metric.For(Sales)))
+
+e.Metric.Without = sum({$<$1>}Sales) 
+>>e.g., $(=$(e.Metric.Without($1)))
+
+e.Metric = $1($2)
+>>e.g., $(e.Metric(Sum, Sales))
+
+===================================================================================================================
+
+Semantic Layer in QlikView:
+making sense out of your data in every way, such as connecting data source; transforming data; adding calculation to data; employing Dual() function to create both textual and numeric values.
+
+A Data Lake is a storage and analytic system which stores structured and unstructured data from all source systems in its raw form.
+
+Qlik NPrinting is a reporting platform for QlikView and Qlik Sense.  With NPrinting you can create reports from your QlikView and Qlik Sense apps and distribute them automatically in a range of standard format such as PDF, Excel, Word, PowerPoint, HTML by email.
+
+Database normalization is the process of organizing the columns (attributes) and tables of a relational database to reduce data redundancy and improve data integrity.
+
+Denormalization is the process of improving the read performance of a database at the expense of losing some write performance, by adding redundant copies of data by grouping data.
+
+Mapping in Database:
+Data mapping is the process of creating data element mapping between two distinct data models.  Data mapping is used as a first step for a wide variety of data integration tasks including: Data transformation or data mediation between a data source and a destination.
+
+Variables are containers that hold information, their sole purpose is to tabel and store data in memory. This data can be used through the program / applicaiton.
+
+Conceptual Data Model
+A conceptual data model identifies the highest-level relationships between the different entities. Features of conceptual data model include: 
+* Includes the important entities and the relationships among them;
+* No attribute is specified;
+* No primary key is specified;
+
+Logical Data Model
+A logical data model describes the data in as much details as possible, without regard to how they will be physical implemented in the database. Features of a logical data model include:
+* Includes all entities and relationships among them;
+* All attributes for each entities are specified;
+* The primary key for each entity is specified;
+* Foreign keys (keys identifying the relationship between different entities) are specified;
+* Normalization occurs at this level;
+The steps for designing the logical data model are as follows:
+1. Specify primary keys for all entities;
+2. Find the relationships between different entities;
+3. Find all attributes for each entity;
+4. Resolve many-to-many relationships;
+5. Normalization;
+
+Physical Data Model
+A physical data model represents how the model will be built in the database.  A physical database model shows all table structures, including column names, column data type, column constraints, primary key, foreign key, and relationships between tables. Features of a phycial data model include:
+* Specification all tables and columns;
+* Foreign keys are used to identify relationships between tables;
+* Denormalization may occur based on user requirements;
+* Physical considerations may  cause the physical data model to be quite different from the logical data model;
+* Physical data model will be different for different RDBMS. For example, data type for a column may be different between MySQL and SQL Server.
+The steps for physical data model design are as follows:
+1. Convert entities into tables;
+2. Convert relationships into foreign keys;
+3. Convert attributes into columns;
+4. Modify the physical data model based on physical constraints/requirements.
+
+Feature, Conceptual, Logical, Physical
+EntityNames, Y, Y, N
+EntityRelationships, Y, Y, N
+Attributes, N, Y, N
+PrimaryKeys, N, Y, Y,
+ForeignKeys, N, Y, Y,
+TableNames, N, N, Y
+ColumnName, N, N, Y
+ColumnDataTypes, N, N, Y
+
+Circular Reference is "loop" in a data structure, data modeling.  The tables are associated in such a way there is more than one path of association between two field. It might lead to ambiguities in interpretation of data.
+
+A Pivot Table is a table that summarizes data in another table, and is made by applying an operation such as sorting, averaging, or summing to data in the first table, typically including grouping of the data. 
+
+=================================================================================================================
+
+Pick(Match(fieldname, value1, value2,......), Expression1, Expression2......) as NewField
+
+if(len(trim([Field]))>0, [Field], null()) as [Field]
+
+Num() vs. Num#()
+num(5555.123456, '#,##0.00') returns 5,555.12
+num(num#('aaa1234', 'aaa####')) returns 1234
+
+
+134958 convert to hh:mm:ss
+=time(time#(right(0&TimeField,6), 'hhmmss')) as NewTimeFormat
+
+
+IF X>0 THEN
+	LOAD * FROM pos.csv;
+ELSEIF X<0 THEN
+	LOAD * FROM neg.csv;
+ELSE
+	LOAD * FROM zero.csv;
+END IF
+
+//Check IsBeingGenerated 0 or 1, before loading data//
+IBG:
+Load IsBeingGenerated;
+SQL select *
+From .......;
+
+LET vIBG = Peek('IsBeingGenerated',0,'IBG');
+
+If '$(vIBG)' <> 0  Then
+Exit Script;
+End If
+
+
+
+Drop Table IBG;
+QlikTips: <<Passing Parameters in a URL and Document>>
+
+The URL has (2) parts:
+First Part: http://qlikviewanalytics.snclavalinom.com/QvAJAXZfc/opendoc.htm?document=CMB_UAT%2FCMB_Site_Module_Count.qvw&host=QVS%40qkvapp01
+Second Part: (multiple parameters) &select=LBRegion,<value>&select=LBProvince,<value>&select=LBFSA,<value>&select=LBSite,<value>&select=LBCity,<value>
+
+134958 >>> 1:49:58 PM
+=time(time#(right(0&TimeField,6),'hhmmss'))  as NewTime
+
+QV boolean function:
+IsNum()
+IsNull()
+IsText()
+True() return -1
+False() return 0
+
+
+Fact table with mixed granularity using generic keys.
