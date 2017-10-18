@@ -1,0 +1,72 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab PriceTransactions
+PriceTransactions:
+LOAD 
+		date(Date#(StartDate,'MM/DD/YYYY'), 'MMM-DD-YYYY')	as StartDate
+		,Product 
+		,Price
+Inline
+[
+Product, StartDate, Price
+A, 06/15/2017, 1.95
+A, 07/03/2017, 2.95
+A, 09/01/2017, 1.50
+B, 03/15/2017, 99
+B, 06/11/2017, 120
+]
+;
+///$tab Fill
+/*
+Expand the PriceTransactions table into 1 row per day for each product.
+We will create a new table, "PriceTransaction2", and Drop the old table.
+A preceding load is used to compute an EndDate, and the EndDate is used in the
+WHILE loop to generate multiple rows.
+*/
+PriceTransactions2:
+//Add a Month dimension for the charts.
+LOAD
+		*
+		,date(MonthStart(Date), 'MMM-YYYY')					as MonthYear	//MonthYear dimension for the charts
+;
+//Expand into 1 row per date, using the EndDate generate below.
+LOAD
+		*
+		,date((StartDate + IterNo()-1),'MMM-DD-YYYY')		as Date
+WHILE StartDate + IterNo()-1 <= EndDate			//generate rows with incrementing Dates until we reach the EndDate value for this row.
+;
+/*
+Assign an EndDate value to each Price row, using the StartDate of the new Price for the same Product.
+If the StartDate for the next Product price is 01/23/2008 (MM/DD/YYYY), then the EndDate
+for this Product Price is the prior day -- 01/22/2008
+*/
+LOAD
+		*
+		,date(if(Previous(Product)=Product 					//if the same product,
+			,date(Previous(StartDate)-1)				//assign the prior day
+			,today(1)),'MMM-DD-YYYY')									//otherwise assign today
+			as EndDate
+Resident PriceTransactions
+//The ORDER is important! We must group by Product, and within Product, we must read Descending -- most recent Price first.
+Order by Product, StartDate DESC
+;
+
+//Drop the original PriceTranactions table
+DROP Table PriceTransactions
+;

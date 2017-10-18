@@ -1,0 +1,63 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Main 2
+SET vQVDPath = 'C:\Users\zf328\Documents\Qlik\Documentations\GoodQvwSample\QVD\';
+
+CountryNameCode:
+LOAD 
+		 [Country or Area Name]		as Country
+		,if(left([Country or Area Name],1)='A','A_Group',
+		 if(left([Country or Area Name],1)='B','B_Group',
+		 if(left([Country or Area Name],1)='C','C_Group',
+		 if(left([Country or Area Name],1)='D','D_Group',
+		 if(left([Country or Area Name],1)='E','E_Group',
+		 if(left([Country or Area Name],1)='F','F_Group',
+		 if(left([Country or Area Name],1)='G','G_Group',
+		 if(left([Country or Area Name],1)='H','H_Group',
+		 if(left([Country or Area Name],1)='I','I_Group',
+		 if(left([Country or Area Name],1)='J','J_Group',
+		 if(left([Country or Area Name],1)='K','K_Group',
+		 if(left([Country or Area Name],1)='L','L_Group',
+		 if(left([Country or Area Name],1)='M','M_Group',
+		 if(left([Country or Area Name],1)='N','N_Group',
+		 if(left([Country or Area Name],1)='O','O_Group',
+		 if(left([Country or Area Name],1)='P','P_Group',
+		 if(left([Country or Area Name],1)='Q','Q_Group',
+		 if(left([Country or Area Name],1)='R','R_Group',
+		 if(left([Country or Area Name],1)='S','S_Group',
+		 if(left([Country or Area Name],1)='T','T_Group',
+		 if(left([Country or Area Name],1)='U','U_Group',
+		 if(left([Country or Area Name],1)='V','V_Group',
+		 if(left([Country or Area Name],1)='W','W_Group',
+		 if(left([Country or Area Name],1)='X','X_Group',
+		 if(left([Country or Area Name],1)='Y','Y_Group',
+		 if(left([Country or Area Name],1)='Z','Z_Group',
+		 '<N/A>'))))))))))))))))))))))))))		as NameGroup
+		,[ISO "ALPHA-2 Code]		as Code2
+		,[ISO ALPHA-3 Code]			as Code3
+		
+FROM [http://www.nationsonline.org/oneworld/country_code_list.htm]
+(html, codepage is 1252, embedded labels, table is @3, filters(
+Remove(Col, Pos(Top, 1)),
+Remove(Row, Pos(Top, 2))
+))
+;
+
+Store CountryNameCode into $(vQVDPath)CountryNameCode.qvd(qvd)
+;

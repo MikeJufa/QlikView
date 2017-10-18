@@ -1,0 +1,119 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Setup
+SET Script_Start = now(1);
+
+/*
+This script will build a list of Users, Groups and Group Membership from
+Active Directory and create QVD files:
+
+ADUsers.qvd
+ADGroups.qvd
+ADGroupMembers.qvd
+
+Read access to AD is required for the userid running the script.
+*/
+
+//Change the DC = values to reflect your AD domain name. For example, if your domain is "mycompany.com", use:
+SET RootDse = 'DC=mycompany, DC=com';
+///$tab Users
+/*
+Read names from Active Directory using AdsDSO.
+Active Directory returns a maximum number (pagesize) of rows per call.
+The loop below will get all the rows regardless of the pagesize.
+*/
+
+CONNECT TO 'Provider=ADsDSOObject';
+
+LET arg = chr(01);					//set search start name to a very low value
+DO
+	ADUsers:
+	//FIRST 1000   		//Workaround for undefined SQL error.
+	LOAD Distinct
+		//Add additional Fields as required
+		name as UserName,
+		distinguishedName as UserDN
+		;
+	SQL SELECT
+		//Add additional Fields as required
+		name,
+		distinguishedName
+	FROM 'LDAP://$(RootDse)'	WHERE objectCategory='person'
+	AND name>'$(arg)'			//get rows where "name" is GT the arg
+	;
+	
+	EXIT DO WHEN ScriptError > 1				//Stop loop if SELECT has error
+	EXIT DO WHEN NoOfRows('nameTable') = 0		//Stop loop if SELECT returns nothing
+	EXIT DO WHEN peek('UserName') = '$(arg)'	//if the last "name" read is EQ to arg -- no more entries
+	
+	LET arg = peek('UserName');					//set the arg to the last "name" read
+
+LOOP
+///$tab Groups
+/*
+Read names from Active Directory using AdsDSO.
+Active Directory returns a maximum number (pagesize) of rows per call.
+The loop below will get all the rows regardless of the pagesize.
+*/
+
+CONNECT TO 'Provider=ADsDSOObject';
+
+LET arg=chr(01); 		//Set search start name to a very low value.
+DO
+	ADGroups:
+	LOAD
+		name as GroupName,
+		distinguishedName as GroupDN,
+		info as GroupInfo
+	;
+	SQL SELECT
+		name, distinguishedName, info
+	FROM 'LDAP://$(RootDse)' WHERE objectCategory='Group'
+	AND name>'$(arg)'		//get rows where "name" is GT the arg
+	;
+	
+	EXIT DO WHEN ScriptError > 1				//Stop loop if SELECT has error
+	EXIT DO WHEN NoOfRows('nameTable') = 0		//Stop loop if SELECT returns nothing
+	EXIT DO WHEN peek('GroupName') = '$(arg)'	//if the last "name" read is EQ to arg -- no more entries
+	
+	LET arg = peek('GroupName'); 				//set the arg to the last "name" read
+	
+LOOP
+///$tab GroupMembers
+//Load Group Member names
+
+LET arg = NoOfRows('ADGroups');
+FOR i = 0 to NoOfRows('ADGroups') -1
+LET Group = peek('GroupDN', $(i), 'ADGroup');
+		
+		ADGroupMembers:
+		LOAD Distinct
+		distinguishedName 	as UserDN,
+		'$(Group)'			as GroupDN;
+		SELECT distinguishedName
+		FROM 'LDAP://$(RootDse)' WHERE MemberOf = '$(Group)';
+
+NEXT i;
+///$tab StoreQVDs
+DIRECTORY QVD;
+STORE ADUsers INTO ADUsers.qvd(qvd);
+STORE ADGroups INTO ADGroups.qvd(qvd);
+STORE ADGroupMembers INTO ADGroupMembers.qvd(qvd);
+///$tab Cleanup
+SET arg=;

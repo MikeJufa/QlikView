@@ -1,0 +1,94 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab TestData
+/*
+Create some data for testing, use column name like @n to make it look similar to reading from a text file.
+
+The test data is a phone call detail file. The first column in each record indicates the Record Type.
+The 01 records define the phone number that applies to the records that follow.
+The rectype and columns for each are as follows:
+01, PhoneNumber
+02, CallDateTime, CallDuration, CallCity
+03, BillingAddress, BillingCity
+04, "Total Charges" ChargeAmount
+*/
+
+rawdata:
+LOAD
+		*
+		,RecNo()		as RecNo
+Inline
+[
+@1, @2, @3, @4
+01, 5557891234
+02, 01/01/2008 14:15, 300, Windsor
+02, 01/02/2008 11:22, 100, Aptos
+02, 01/06/2008 08:55, 450, Miami
+03, 123 Anyplace, Anywhere USA
+04, Total Charges $27.03
+01, 9996543211
+02, 01/05/2008 09:34, 150, Windsor
+02, 01/02/2008 11:33, 250, New York City
+03, 78 Sunset Strip, Los Angeles USA
+04, Total Charges $3.53 
+]
+;
+///$tab Load and Merge
+/*
+This example shows how to load and merge different data in an input file that
+contains multiple record types.
+See the "Test Data" tab for a description of the file layout.
+*/
+
+PhoneDataTemp:
+LOAD
+		@1											as Rectype
+		/*If it is an 01 rectype, take field @2 as the PhoneNumber.
+		if not and 01, get the PhoneNumber that was assgined to the previous *Output* row.*/
+		,if(@1=01, @2, Peek('PhoneNumber'))			as PhoneNumber
+		/*if this is not an 02 record, the following detail feilds will be meaningless.
+		We don't care because rectypes will be separated later.*/
+		,Timestamp#(@2, 'MM/DD/YYYY hh:mm')			as CallDatetime
+		,@3											as CallDuration
+		,@4 										as CallCity
+		,TextBetween(@2, 'Total Charges $', '')		as TotalCharges
+Resident rawdata						//From the test table previously loaded
+where Match(@1, 01, 02, 04)				//get only these rectypes
+;
+
+CallDetail:
+LOAD
+		PhoneNumber
+		,CallDatetime
+		,CallDuration
+		,CallCity
+Resident PhoneDataTemp
+where Rectype = 02
+;
+
+Charges:
+LOAD
+		PhoneNumber
+		,TotalCharges
+Resident PhoneDataTemp
+where Rectype = 04
+;
+
+DROP Table PhoneDataTemp
+;

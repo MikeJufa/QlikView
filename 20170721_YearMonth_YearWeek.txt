@@ -1,0 +1,163 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab MonthData
+TempMthData:
+LOAD * Inline
+[
+GBCO, GBMCU, GBSUB, GBOBJ, GBAN01, GBAN02, GBAN03, GBAN04, GBAN05, GBAN06, GBAN07, GBAN08, GBAN09, GBAN10, GBAN11, GBAN12
+31000, FW2310, 3110200, 501050, 500, 1300, 587878, 490262, 299641, 274235, 200, 1000, 517212, 83064, 283820, 61352
+31000, FW7100, 3110100, 501100, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200
+]
+;
+
+T1:
+CrossTable(TempMonth, MonthData, 5)
+LOAD
+	GBCO
+	,GBMCU
+	,GBSUB
+	,GBOBJ
+	,'2017'				as Year
+	,GBAN01/100			as 01
+	,GBAN02/100			as 02
+	,GBAN03/100			as 03
+	,GBAN04/100			as 04
+	,GBAN05/100			as 05
+	,GBAN06/100			as 06
+	,GBAN07/100			as 07
+	,GBAN08/100			as 08
+	,GBAN09/100			as 09
+	,GBAN10/100			as 10
+	,GBAN11/100			as 11
+	,GBAN12/100			as 12
+Resident TempMthData
+;
+
+DROP Table TempMthData
+;
+
+NoConcatenate
+
+MonthData:
+LOAD
+	*
+	,date(MonthStart(YearMonthDate),'MMM-YYYY') 		as YearMonth
+	,date(MonthStart(YearMonthDate),'YYYYMM')		as YearMonthNum
+;
+LOAD
+	*
+	,Month(YearMonthDate)	as Month
+;
+LOAD
+	*
+	,MakeDate(Year, MonthNum)	as YearMonthDate
+;
+LOAD
+	*
+	,Num#(TempMonth)	as MonthNum
+Resident T1
+;
+
+DROP Table T1
+;
+///$tab WeekData
+TempWkData:
+LOAD * Inline
+[
+GBCO, BN01, BN02, BN03, BN04, BN05, BN06, BN07, BN08, BN09, BN10, BN11, BN12, BN13, BN14, BN15, BN16, BN17, BN18, BN19, BN20, BN21, BN22, BN23, BN24, BN25, BN26, BN27, BN28, BN29, BN30, BN31, BN32, BN33, BN34, BN35, BN36, BN37, BN38, BN39, BN40, BN41, BN42, BN43, BN44, BN45, BN46, BN47, BN48, BN49, BN50, BN51, BN52
+31000, 12, 24, 88, 200, 197, 50, 54, 33, 22, 10, 8, 77, 74, 99, 30, 13, 27, 38, 20, 94, 98, 23, 24, 28, 48, 68, 69, 55, 65, 64, 52, 53, 40, 39, 51, 100, 60, 58, 15, 91, 67, 32, 22, 12, 99, 34, 90, 88, 87, 76, 77, 78
+]
+;
+
+T2:
+CrossTable(Week, WkData)
+LOAD
+	'2017'		as WkYear
+	,BN01		as 01
+	,BN02		as 02
+	,BN03		as 03
+	,BN04		as 04
+	,BN05		as 05
+	,BN06		as 06
+	,BN07		as 07
+	,BN08		as 08
+	,BN09		as 09
+	,BN10		as 10
+	,BN11		as 11
+	,BN12		as 12
+	,BN13		as 13
+	,BN14		as 14
+	,BN15		as 15
+	,BN16		as 16
+	,BN17		as 17
+	,BN18		as 18
+	,BN19		as 19
+	,BN20		as 20
+	,BN21		as 21
+	,BN22		as 22
+	,BN23		as 23
+	,BN24		as 24
+	,BN25		as 25
+	,BN26		as 26
+	,BN27		as 27
+	,BN28		as 28
+	,BN29		as 29
+	,BN30		as 30
+	,BN31		as 31
+	,BN32		as 32
+	,BN33		as 33
+	,BN34		as 34
+	,BN35		as 35
+	,BN36		as 36
+	,BN37		as 37
+	,BN38		as 38
+	,BN39		as 39
+	,BN40		as 40
+	,BN41		as 41
+	,BN42		as 42
+	,BN43		as 43
+	,BN44		as 44
+	,BN45		as 45
+	,BN46		as 46
+	,BN47		as 47
+	,BN48		as 48
+	,BN49		as 49
+	,BN50		as 50
+	,BN51		as 51
+	,BN52		as 52
+Resident TempWkData
+;
+DROP Table TempWkData
+;
+
+NoConcatenate
+
+WeekData:
+LOAD
+	*
+	,num(month(MakeWeekDate(WkYear, WeekNum)))		as MonthNum
+;
+LOAD
+	*
+	,Num#(Week)		as WeekNum
+Resident T2
+;
+
+DROP Table T2
+;

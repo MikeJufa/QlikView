@@ -1,0 +1,37 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Load From FieldValue
+//generate some test data.
+Data:
+LOAD
+	//generate 20 distinct values for the list
+	ceil(Rand()*1000)		as MyField
+AutoGenerate(10000)
+;
+
+//find the Min. & Max. of the field "MyField".
+MinMax:
+LOAD
+		//RecNo() is used as a counter to get FieldValue 1, 2, 3, etc.
+		//The num() function assigns a format. Without it. the numbers appear as "?" in the UI.
+		num(min(FieldValue('MyField', RecNo())))		as MinValue,
+		num(max(FieldValue('MyField', RecNo())))		as MaxValue
+//FieldValueCount = number of Field values
+AutoGenerate FieldValueCount('MyField')
+;

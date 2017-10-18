@@ -1,0 +1,30 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Main 2
+//Decide how many KPI's that you want to use.
+SET vNumberOfKPIs = 3;
+
+//Loop to create the variable needed for the KPI's
+FOR Start = 1 to vNumberOfKPIs
+		SET vG.KPI$(Start) =  '';
+		vG.KPI$(Start)Description = '';
+		vG.KPI$(Start)Diff = '';
+		vG.KPI$(Start)TargetDiff = '';
+		SET vG.KPI$(Start)Unit = '';
+NEXT Start

@@ -1,0 +1,51 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Main 2
+TempData:
+LOAD * 
+		,date(date#(Date, 'DD/MM/YYYY'), 'YYYY-MMM-DD')			as [PDate]
+Inline
+[
+Product, Date, Amount
+A, 20/1/2013, 20
+A, 21/1/2013,
+A, 22/1/2013, 40
+A, 23/1/2013, 80
+A, 5/4/2013, 20.28
+B, 20/1/2013,
+B, 21/1/2013, 10
+B, 18/1/2013, 45.5
+B, 31/3/2014, 88
+B, 23/1/2013
+C, 31/1/2014, 222
+C, 2/2/2014, 100
+C, 10/5/2017, 178
+]
+;
+
+Data:
+LOAD 
+		*
+		,if(Product = peek(Product), RangeSum(Amount, Peek(AccumulatedAmount)), RangeSum(Amount))		as AccumulatedAmount
+Resident TempData
+Order by Product, PDate
+;
+
+DROP Table TempData
+;

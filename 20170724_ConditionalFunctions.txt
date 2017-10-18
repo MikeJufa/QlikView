@@ -1,0 +1,84 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Main 2
+SET vQVDPath = 'C:\Users\zf328\Documents\Qlik\Documentations\GoodQvwSample\QVD\';
+
+Months:
+LOAD * Inline
+[
+Month
+Jan
+Feb
+Mar
+Apr
+May
+Jun
+Jul
+Aug
+Sep
+Oct
+Nov
+Dec
+]
+;
+
+Numbers:
+LOAD * Inline
+[
+Number
+1
+2
+3
+4
+5
+]
+;
+
+SET vDateFormat = 'MMM-DD-YYYY';
+
+ValidatedDates:
+LOAD
+	TempDate,
+	Alt(date(Date#(TempDate,'M/D/YYYY'),'$(vDateFormat)'), 
+	    date(Date#(TempDate,'DD/MM/YYYY'),'$(vDateFormat)'), 
+	    date(Date#(TempDate,'DD/MM/YY'),'$(vDateFormat)'), 
+	    date(Date#(TempDate, 'YYYY-MM-DD'),'$(vDateFormat)'), 
+	    date(Date#(TempDate, 'DD.MM.YYYY'),'$(vDateFormat)'), 
+//	    date(TempDate,'$(vDateFormat)'),
+	    date(Date#(TempDate,'YYYY-MMM-DD'),'$(vDateFormat)'),
+	    date(Date#(TempDate,'YYYYMMDD'),'$(vDateFormat)'),
+	    'Invalid Date')	as ValidatedDate
+Inline
+[
+TempDate
+1/1/2014
+1/6/2014
+01/08/2014
+25/01/14
+40729
+30.02.2014
+16.08.2014
+31/12/2014
+20/05/2014
+2014-02-27
+2013-11-20
+2014-Jan-20
+20140418
+]
+;

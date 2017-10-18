@@ -1,0 +1,70 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Data
+Data:
+LOAD
+		*
+		,date(Date#(Date,'YYYY-MM-DD'),'MMM-DD-YYYY')				as NewDate
+		,num(date(Date#(Date,'YYYY-MM-DD'),'MMM-DD-YYYY'))			as NewDateNum
+		,Date#(Date,'YYYY-MM-DD')									as DateNum
+Inline
+[
+Date, Rate
+2013-01-01, 1.01
+2013-01-04, 1.08
+2013-06-20, 1.553
+2013-08-30, 1.88
+2013-12-31, 1.07
+2014-01-08, 1.09
+2014-07-09, 1.98
+]
+;
+
+MinMaxDate:
+LOAD
+		 min(NewDate)												as MinDate
+		,max(NewDate)												as MaxDate
+Resident Data
+;
+
+LET vMinDate = Peek('MinDate',-1,'MinMaxDate')-1;
+//LET vMaxDate = Peek('MaxDate',-1,'MinMaxDate');
+LET vMaxDate = num(AddMonths(Today(),-20));
+
+join(Data)
+
+LOAD
+		date(RecNo() + $(vMinDate))									as NewDate
+AutoGenerate $(vMaxDate)-$(vMinDate)
+;
+
+NoConcatenate
+
+Rate:
+LOAD
+		NewDate
+		,year(NewDate)												as Year
+		,date(MonthStart(NewDate), 'MMM-YYYY')						as Month
+		,if(IsNull(Rate),Peek(Rate),Rate)							as Rate
+Resident Data
+Order by NewDate
+;
+
+drop Table MinMaxDate
+;
