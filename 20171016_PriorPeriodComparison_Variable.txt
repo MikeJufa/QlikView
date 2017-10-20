@@ -1,0 +1,8 @@
+﻿vMaxDate,16 Oct 2017, =date(max(Date),'DD MMM YYYY')
+vMaxDay,16, =day(max(Date))
+vMaxMonth,Oct, =Month(max(Date))
+vMaxYear,2017, =Year(max(Date))
+vPriorMonth,Sep, =Month(AddMonths(max(Date),-1))
+vPriorMonthYear,2017, =Year(AddMonths(max(Date),-1))
+vPriorYear,2016, =vMaxYear-1
+vPriorYearDate,16 Oct 2016, =date(addyears(max(Date),-1),'DD MMM YYYY')

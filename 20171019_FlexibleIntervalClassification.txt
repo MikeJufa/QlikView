@@ -1,0 +1,39 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Main 2
+SET vQVDPath = 'C:\Users\zf328\Documents\QlikView\QVD\';
+
+
+Data:
+LOAD
+		*
+		,Dual(time(Floor([Approved Date],1/48),'h:mm TT')&' - '&time(ceil([Approved Date],1/48),'h:mm TT'),Floor(Frac([Approved Date]),1/48))		as FlexibleIntervalClassification
+		,Dual(time(Floor([Approved Date],1/24),'h:mm TT')&' - '&time(ceil([Approved Date],1/24),'h:mm TT'),floor(frac([Approved Date]),1/24))		as FIC2
+		,Dual(time(Floor([Approved Date],1/12),'h:mm TT')&' - '&time(ceil([Approved Date],1/12),'h:mm TT'),floor(frac([Approved Date]),1/12))		as FIC3
+;
+LOAD
+	[Approved Date]
+	,[COC Date]
+	,[POV Date]
+	,[Work Order Due By Date]
+	,[Service Delivery Date]
+	,[Cut Off Date]
+From $(vQVDPath)KPI1.qvd(qvd)
+;
+		

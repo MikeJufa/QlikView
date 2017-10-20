@@ -1,0 +1,41 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Main 2
+T1:
+LOAD * Inline
+[
+ProductName, Sales
+Davenport Shoes, 94933
+Jack Flash Dress, 44593
+Trail Mix, 33098
+Atles Lussekofta, 32088
+Bike Helmet, 23667
+Anio Shoes, 22707
+Desperado Jeans, 19656
+Casual Boots, 19514
+Baby Dark Lounge Suit, 15860
+Deuce Shirt, 14055
+Basket Shoes, 10287
+Bow Tie, 10118
+Cap, 10016
+Game T-Shirt, 8026
+Chantell Shirt, 7661
+DSW Sandals, 5373
+]
+;

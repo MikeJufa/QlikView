@@ -1,0 +1,90 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Main 2
+Temp:
+LOAD * Inline
+[
+Project, Phase, StartDate, EndDate
+P1, 1, 1/1/2008, 2/28/2008
+P1, 2, 3/5/2008, 9/30/2008
+P1, 3, 10/15/2008, 12/31/2008
+P2, 1, 1/15/2008, 7/30/2008
+P2, 2, 7/15/2008, 12/31/2008
+]
+;
+
+ProjectTable:
+LOAD
+	*
+	,date(StartDate,'MMM DD, YYYY')	as [SDate]
+	,date(EndDate,'MMM DD, YYYY')	as [EDate]
+	,num(StartDate)					as [SDateNum]
+	,num(EndDate)					as [EDateNum]
+Resident Temp
+;
+
+DROP Table Temp
+;
+
+Generic LOAD
+	Project
+	,'Start Phase'&Phase
+	,SDate
+Resident ProjectTable
+;
+
+Generic LOAD
+	Project
+	,'End Phase'&Phase
+	,EDate
+Resident ProjectTable
+;
+
+FOR i = NoOfTables()-1 to 0 step -1
+	LET vTable = TableName($(i));
+		if WildMatch('$(vTable)','ProjectTable-1.*')	THEN
+			Left Join (ProjectTable) LOAD * Resident [$(vTable)];
+			DROP Table [$(vTable)];
+		ENDIF
+NEXT i
+;
+///$tab Main 3
+OrdersTable:
+LOAD * Inline
+[
+Order, SalesRep, Amount, Status
+1, A, 100, Shipped
+2, B, 150, Shipped
+3, A, 200, Active
+4, A, 300, Cancelled
+5, C, 50, Returned
+6, A, 200, Returned
+7, B, 400, Shipped
+8, C, 500, Active
+9, D, 1000, Shipped
+]
+;
+
+Flags:
+Generic LOAD
+	Order
+	,'Status_'&Status
+	,1
+Resident OrdersTable
+;

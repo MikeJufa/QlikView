@@ -1,0 +1,18 @@
+Combo Chart:
+
+Dimension: 
+ProductName
+
+Expressions:
+1. sum(Sales)
+background:=if([Pareto Class]='C',LightRed(),if([Pareto Class]='B',Yellow(),rgb(0,188,0)))
+
+2. Accumulated Sales
+=RangeSum(Above(sum(Sales),0,RowNo()))
+3. Inclusive Percentage
+=RangeSum(Above(sum(Sales),0,RowNo()))/sum(total Sales)
+4. Exclusive Percentage
+=RangeSum(Above(sum(Sales),1,RowNo()))/sum(total Sales)
+5. Pareto Class
+=if([Exclusive Percentage]<=0.8,'A',if([Exclusive Percentage]<0.9,'B','C'))
+

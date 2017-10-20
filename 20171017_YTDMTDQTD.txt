@@ -1,0 +1,61 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Data
+OrderDate:
+LOAD
+	*
+	,year(OrderDate)										as Year
+	,month(OrderDate)										as Month
+	,date(MonthStart(OrderDate), 'YYYYMM')					as YearMonth
+	,WeekDay(OrderDate)										as WeekDay
+	,Day(OrderDate)											as Day
+	,'Q'&Ceil(month(OrderDate)/3)							as Quarter
+	,year(OrderDate)&'-'&'Q'&Ceil(Month(OrderDate)/3)		as YearQuarter
+	,YearToDate(OrderDate)									as T2
+	,YearToDate(OrderDate, -1)								as T3
+	,YearToDate(OrderDate,0,month(Today()))					as T4
+	,YearToDate(OrderDate,-1,Month(Today()))				as T5
+	,YearToDate(OrderDate,0,Ceil(Month(Today())/3)*3-2)		as T6
+	,YearToDate(OrderDate,-1,Ceil(Month(Today())/3)*3-2)	as T7
+;
+LOAD * Inline
+[
+OrderDate
+1/1/2017
+1/18/2017
+2/3/2017
+2/22/2017
+3/5/2017
+3/19/2017
+4/9/2017
+4/18/2017
+5/15/2017
+6/30/2017
+7/22/2017
+12/14/2017
+9/10/2016
+11/11/2016
+4/5/2016
+6/10/2016
+5/1/2016
+7/1/2017
+10/1/2017
+10/2/2016
+]
+;

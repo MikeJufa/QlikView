@@ -1,0 +1,37 @@
+='YTD'&chr(10)&'$(vMaxDate)'
+=sum({$<Year={'$(vMaxYear)'},Date={'<=$(vMaxDate)'},Month=,Day=,MonthYear=>}Amount)
+
+
+='YTD'&chr(10)&'$(vPriorYearDate)'
+=sum({$<Year={'$(vPriorYear)'},Date={'<=$(vPriorYearDate)'},Month=,Day=,MonthYear=>}Amount)
+
+
+YTD Variance
+(Column(1)-Column(2))/Column(1)
+
+
+=''
+
+
+='MTD'&chr(10)&'$(vMaxDay) $(vMaxMonth) $(vMaxYear)'
+=sum({$<Year={'$(vMaxYear)'},Month={'$(vMaxMonth)'},Day={'<=$(vMaxDay)'},Date=,MonthYear=>}Amount)
+
+
+='MTD'&chr(10)&'$(vMaxDay) $(vMaxMonth) $(vPriorYear)'
+=sum({$<Year={'$(vPriorYear)'},Month={'$(vMaxMonth)'},Day={'<=$(vMaxDay)'},Date=,MonthYear=>}Amount)
+
+
+Prior Year Variance
+(Column(5)-Column(6))/Column(5)
+
+
+=''
+
+
+
+='MTD'&chr(10)&'$(vPriorMonth) $(vPriorMonthYear)'
+=sum({$<Year={'$(vPriorMonthYear)'},Month={'$(vPriorMonth)'},Day={'<=$(vMaxDay)'},Date=,MonthYear=>}Amount)
+
+
+Prior Year Month Variance
+(Column(5)-Column(9))/Column(5)
