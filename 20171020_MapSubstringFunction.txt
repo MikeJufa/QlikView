@@ -1,0 +1,51 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab MappingTable
+ReplaceMap:
+Mapping LOAD * Inline
+[
+char replace
+(
+)
+"
+'
+/
+-
+,
+](delimiter is ' ')
+;
+///$tab TestData
+TestData:
+LOAD
+	*
+	,'('&left(ReplacedString,3)&')'&mid(ReplacedString,4,3)&'-'&Right(ReplacedString,4)		as PhoneNumber
+;
+LOAD
+	*
+	,MapSubString('ReplaceMap', Data)		as ReplacedString
+;
+LOAD * Inline
+[
+Data
+(415)555-1234
+(415)543,4321
+"510"123-4567
+/925/999/4567
+](delimiter is ' ')
+;

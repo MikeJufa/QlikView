@@ -1,0 +1,99 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Rentals
+Rentals:
+LOAD 
+		 RecNo()		as RentalID
+		,EquipmentID
+		,date(Date#(DateOut, 'MM/DD/YYYY'), 'MMM-DD-YYYY')	as DateOut
+		,date(Date#(DateIn, 'MM/DD/YYYY'),'MMM-DD-YYYY')	as DateIn
+Inline
+[
+EquipmentID, DateOut, DateIn
+A, 01/03/2008, 02/07/2008
+A, 02/14/2008, 02/20/2008
+A, 02/24/2008, 03/02/2008
+B, 01/03/2008, 02/07/2008
+B, 03/22/2008, 03/23/2008
+C, 05/15/2008, 05/20/2008
+]
+;
+///$tab DateTable
+/*
+Generate a DateTable for the range seen in the Rental data.
+We will also created additional dimensions in the preceding LOAD like "Month" for use in the charts.
+See the QV CookBook example "Generate date (Calendar) table" for more information on generating date tables.
+*/
+DateTable:
+LOAD
+		*
+		,month(RentedDay)								as Month
+		,year(RentedDay)								as Year
+		,QuarterName(RentedDay)							as QuarterName
+		,'Q'&ceil(month(RentedDay)/3)					as Quarter
+;
+LOAD
+		date((mindate + IterNo()),'MMM-DD-YYYY')		as RentedDay
+While mindate + IterNo() <= maxdate
+;
+//Determine the min and max dates in the data for use in building the DateTable.
+//mindate/maxdate are passed up to the LOAD above.
+LOAD
+		 min(DateOut)-1		as mindate
+		,max(DateIn)		as maxdate
+Resident Rentals
+;
+///$tab IntervalMatch
+/*
+Now that we have a table of dates, use IntervalMatch to link the DateOut & DateIn fields
+to dates that fall between the range of DateOut & DateIn.
+
+It's important to use DISTINCT in the IntervalMatch, otherwise we will generate duplicate 
+rows if two EquipmentIDs share DateOut/DateIn.
+
+IntervalMatch will build a new table we will name "LinkTable".
+*/
+LinkTable:
+IntervalMatch(RentedDay)
+LOAD Distinct DateOut,DateIn Resident Rentals
+;
+
+//Next we join the EquipmentID and a counter into the LinkTable.
+Left Join(LinkTable)
+LOAD
+		 DateOut
+		,DateIn
+		,RentalID
+		,1 as RentedDayCounter
+Resident Rentals
+;
+//Finally, we drop the DateOut and DateIn fields from the LinkTable to remove 
+//the unnecessary Sythetic Key.  The tables are now linked by RentalID.
+
+DROP Field DateOut, DateIn from LinkTable
+;
+
+/*
+An alternative to creating a separate LinkTable would be to JOIN the IntervalMatch to the Rentals table.
+
+		LEFT JOIN (Rentals)
+		IntervalMatch(RentedDay) LOAD DISTINCT DateOut, DateIn RESIDENT Rentals;
+		
+The JOIN method simplifies the script but expands the number of rows in the Rentals fact table, which may not be desirable. 
+*/

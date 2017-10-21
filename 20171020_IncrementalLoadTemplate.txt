@@ -1,0 +1,93 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Incremental Setup
+/*Setup for incremental load*/
+
+/*
+The following items are used multiple times in the script.
+It's easiest to specify them in variables.
+*/
+SET vQvdFile = '.\OrderHeader.qvd';			//?? The QVD filename
+SET vTableName = 'OrderHeader';				//?? The name of the QV table we are loading on the Data Load tab
+SET vPK = 'SalesOrderID';					//?? Data Primary Key
+SET vModField = 'ModifiedDate';
+
+//Set a variable indicating if the QVD exists or not. -1 is True, 0 is False
+LET vQvdExists = if(FileSize('$(vQvdFile)')>0,-1,0);
+
+
+IF $(vQvdExists) THEN						//QVD exists, we will do an incremental reload
+		maxdateTab:
+		//Get the max date from this QVD for use in incremental SELECT
+		LOAD max($(vModField)) as maxdate	//?? Set the name of the date or datetime field
+		FROM $(vQvdFile)(qvd);
+		//?? Date may need to be formatted to match the format expected by your SQL SELECT or LOAD statement.
+		//?? e.g., date(peek('maxdate'),'MMDDYYYY')
+		LET vIncrementalExpression = 'WHERE $(vModField) >=#' & date(peek('maxdate'),'MM/DD/YYYY') &'#';
+		DROP Table maxdateTab;
+ELSEIF										//	QVD does not exists
+		LET vIncrementalExpression = '';	//No QVD. Force full reload
+		//LET vIncrementalExpression = 'WHERE $(vModField) >=' & MakeDate(2005,01,01);		//?? Could also set it to some floor date
+ENDIF
+///$tab Data Load
+/*
+Load the incremental changes or full reload.
+This is a standard LOAD (or SQL SELECT) statement.
+vIncrementalExpression is the WHERE clause create in the previous tab.
+*/
+
+OLEDB CONNECT TO [...];
+
+
+$(vTableName):
+SQL SELECT *
+FROM SalesOrderHeader
+//if doing a SQL SELECT, the vIncrementalExpression would be part of the SQL SELECT statement.
+$(vIncrementalExpression) 		//Include WHERE clause created in "Incremental Setup" tab
+;
+///$tab Incremental Update
+//Update the QVD with changes
+
+//If incremental reload was done, load previous data and concatenate to data just read.
+IF $(vQvdExists) THEN
+	//Use CONCATENATE in case we've added any new field
+	Concatenate($(vTableName)) LOAD * From $(vQvdFile)(qvd)
+	WHERE NOT Exists($(vPK))		//Load only QVD rows that were not already loaded in the data load.
+	;
+END IF
+
+/*
+Handle deleted rows. The entire set of Primary Keys from the source table
+is INNER JOINed with the Primary Keys in the QV data table.
+Any Key that does not exist in the source table will be deleted from teh QV Table.
+For a large source table, it may take a while to fetch all the Key values.
+If you do not need to handle deleted rows, don't include this step.
+*/
+
+INNER JOIN ($(vTableName))
+SQL SELECT $(vPK)
+FROM SalesOrderHeader
+;
+
+/*
+Overwrite the QVD with the QV datatable.
+*/
+STORE $(vTablename) INTO $(vQvdFile)(qvd);
+DROP Table $(datatable);		//If we don't need the table in this qvw, it's a good practice to drop large tables.
+///$tab Clean Up
