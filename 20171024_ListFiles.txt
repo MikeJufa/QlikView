@@ -1,0 +1,71 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Subrountines
+/*
+This subroutine lists file attributes from a directory and it's subdirectories.
+See the CALL statement on the next tab for example calls.
+*/
+SUB ListFiles(dir)		//Calling argument is relative or absolute directory path
+		//Load info about each file in the directory
+		FOR EACH file in filelist('$(dir)' & '\*.*');
+			Files:
+			LOAD
+				'$(file)'	as FilePath,
+				SubField('$(file)','.',-1)		as FileExtension,
+				FileSize('$(file)')				as FileSize,
+				FileTime('$(file)')				as FileTime
+			AutoGenerate 1;
+		NEXT file;
+		//We have load all the files in this directory.
+		//Now recursively process subdirectories of $(dir)
+		FOR EACH subdir in dirlist('$(dir)' & '\*')
+			CALL ProcessDir('$(subdir)')
+		NEXT subdir;
+END SUB
+
+
+SUB ProcessDir(dir)
+		//Traverse the directories, starting with the called directory
+		FOR EACH subdir in dirlist('$(dir)');
+			CALL ListFiles('$(subdir)')
+		NEXT subdir;
+END SUB
+///$tab Call ListFiles
+DIRECTORY; 			//Relative directory is current directory
+
+/*
+Call the subroutine to load file list. Subroutine code is on the previous tab.
+Calling Parameter is the starting directory.
+ListFiles may be called multiple times to collect from more than one directory tree.
+*/
+
+
+//Starting directory may be an relative directory
+CALL ListFiles('.')			//Start at Current directory
+
+
+//Starting directory may be an relative directory
+//CALL ListFiles('..')		//Start at directory above current directory
+
+//Starting directory may be an absolute directory
+//CALL ListFiles('C:\temp')
+
+//If a directory does not exist, the script will not error,
+//but of course, no files will be found for that CALL.
+//CALL ListFiles('C:\garbage_not_found')
