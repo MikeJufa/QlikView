@@ -1,0 +1,67 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Keywords
+/*
+Load a list of Keywords we will be searching for.
+Keywords will be normalized by Capitalize() function for matching against text.
+*/
+Keywords:
+LOAD
+		Capitalize(Keyword)		as Keyword
+Inline
+[
+Keyword
+Clean
+Pool
+Service
+Kids
+Vacation
+Business
+great
+]
+;
+///$tab Reviews
+//Load text to be reviewed
+Reviews:
+LOAD
+		*
+		,RecNo()		as ReviewID
+Inline
+[
+Review
+The pool was great
+Great place for kids. Very clean
+The staff was terrible. Bad stary all around.
+Very clean pool. Great Service!
+Water pooling on floor
+]
+;
+///$tab Match Keywords
+//Match Keyword list to Reviews.
+Inner Join (Keywords)			//Inner join -- only Keywords that have a matching Review will be kept.  Change to "Left join" to keep all Keywords.
+LOAD
+		ReviewID
+		,SubField(							//Try to join each individual word
+			Capitalize(						//To ensoure matching case with Keyword list.
+			PurgeChar(Review, '",.!?')		//Remove punctuation
+			)
+		, ' '								//subfield -- Words are delimited by space
+		)	as Keyword
+Resident Reviews
+;

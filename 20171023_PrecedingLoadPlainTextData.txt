@@ -1,0 +1,50 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Main 2
+TestData:
+Generic LOAD
+		RecID
+		,Key
+		,Value
+;
+LOAD
+		RecID
+		,SubField(Pair,':',1)	as Key
+		,SubField(Pair,':',2)	as Value
+;
+LOAD
+		RecID
+		,SubField(Input, ',')	as Pair
+;
+LOAD
+		*
+		,RecNo() as RecID
+Inline
+[
+Input
+Name:Shoes, Size:L, Color:Blue Suede, Stock:200
+Name:Socks, Model:Mens Casual, Stock:0, Color:Black
+Name:Pants, Error:No attributes found
+Name:Baby Clothing, Color:Pink, Stock:300
+Name:Women Clothing, Size:XS, Color:Green, Stock:50
+Name:Men Clothing, Size:XL, Color:Blue, Stock:30
+Name:Women Clothing, Size:XXL, Color:Red, Stock:2, Model:Formal
+Name:Home Deco, Error:No attributes found
+](delimiter is '|')
+;
