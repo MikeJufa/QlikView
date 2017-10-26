@@ -1,0 +1,82 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Wildcard Mapping Table
+/*
+First we load the table that will be used to do the mapping.
+The "Key" is a wildcard string using the optional "*" and "?" special characters as defined
+in the Wildmatch() function.
+
+The "Label" is the value to be assigned if a match is made.
+
+The table is searched from top to bottom, so more specific matches should be listed first.
+*/
+
+wildmap:
+LOAD * Inline
+[
+Key, Label
+X*, Lube
+A1590, Premium Fuel
+*99, Freight
+?15*, Fuels
+?17*, Lube
+
+*, Other
+]
+;
+///$tab Prepare Mapping Expression
+/*
+The script on this tab will process the wildmatch table to create a
+pick(wildmatch(...)...) expression in variable "vMapExpr".
+
+The vMapExpr variable will be used later in the script to do the actual mapping.
+vMapExpr will use the parameter $1 to represent the fieldname to be mapped.
+*/
+
+_MapExpr:
+LOAD
+'pick(wildmatch($1,' & chr(39) & Concat(Key, chr(39) & ',' & chr(39), FieldIndex('Key', Key)) & chr(39) & '), ' & chr(39) & Concat(Label, chr(39) & ',' & chr(39), FieldIndex('Key', Key)) & chr(39) & ')' as MapExpr
+Resident wildmap
+;
+LET vMapExpr = peek('MapExpr',-1);
+DROP Table _MapExpr;
+
+//For this example, I'm going to keep the wildmatch table for illustrative purposes on the Sheet.
+//Drop Table wildmap;		//Drop the wildmatch table -- don't need it anymore.
+///$tab Use the Mapping Expression
+Order:
+LOAD
+		*
+		,$(vMapExpr(PartNo))	as PartGroup
+;
+LOAD
+		*
+Inline
+[
+Customer, PartNo
+A, A1501
+A, A1589
+A, A1590
+A, A159099
+A, Z17901
+A, Z17FF6
+A, X99123
+A, C2200
+]
+;

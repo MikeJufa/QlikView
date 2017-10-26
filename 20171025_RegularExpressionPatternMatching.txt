@@ -1,0 +1,57 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Filtering Using RegExp
+rawProduct:
+LOAD * Inline
+[
+Product
+A001ZQA
+A001ZQX
+A123R
+AB21F0A
+BBBJK27
+B901THF
+B901THFXX
+C201GH89
+]
+;
+
+filteredProduct:
+LOAD
+		Product as FilteredProduct
+Resident rawProduct
+Where regexTest(Product, '^[AB]\d{3}[A-Z][A-Z0-9]*[^X]+$')
+;
+///$tab Validating Using RexExp
+USPhone:
+LOAD *
+	,if(regexTest(Phone, '^(?:\([2-9]\d{2}\)\ ?|[2-9]\d{2}(?:\-?|\ ?))[2-9]\d{2}[- ]?\d{4}$'), 'Yes', 'No') as "Valid?"
+Inline 
+[
+Phone
+(545) 470-9999
+5454709999
+(111) 470-9999
+545-123-9999
+545-47-99
+5-470-9999
+545470123
+545!123-9999
+]
+;

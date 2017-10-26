@@ -1,0 +1,118 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Data
+/*
+This example demonstrates using mapping to change teh labels assigned to class()
+expressions.  It does this by utilizing the fact the internal representation of 
+a class() value is the low bin value.
+
+When would you want to do this?  When the default label provided by class is not
+sufficient. The original problem posted on QlikCommunity was mapping timestamps into
+quarter hours.
+class('12:14', 15) produces a label of '0 <= x < 15'. The poster wanted to see
+'00:00 <= x < 00:15'.
+
+This file also includes an example of using mapping to merge one or more classes.
+*/
+
+Data:
+LOAD * Inline
+[
+Time, Value
+12:00, 100
+12:14, 101
+12:20, 201
+12:30, 300
+12:44, 500
+12:45, 600
+1:05, 345
+21:08, 300
+]
+;
+///$tab Unmapped
+/*
+This LOAD uses the default labels for class() values, which are
+not very appealing for this applicaiton.
+*/
+
+unmapped:
+LOAD
+		Value,
+//		time(Time,'hh:mm TT')			as NewTime,
+		class(Minute(Time), 15)		as DefaultClass
+Resident Data
+;
+///$tab Mapped hh:mm
+/*
+This example maps the classes to nice hh:mm labels.
+
+Create a mapping table. The value to be mapped are the low bin values.
+For a bin of 15 <= x < 30, the value is 15
+*/
+
+classMap:
+Mapping LOAD * Inline
+[
+val, display
+0, 00:00 <= x < 00:15
+15, 00:15 <= x < 00:30
+30, 00:30 <= x < 00:45
+45, 00:45 <= x < 00:60
+]
+;
+
+Map hhmmClass using classMap;
+
+
+hhmmMapped:
+LOAD
+		Value as Value2
+		,class(minute(Time),15)	as hhmmClass
+Resident Data
+;
+///$tab Mapped with String
+/*
+This example shows that the class label may be anything. It doen't
+have to include the <= symbols. You can also use the mapping to merge
+one or more classes together as shown below for 30 & 45.
+
+Create a mapping table. The value to be mapped are the low bin values.
+For a bin of 15 <= x < 30, the value is 15
+*/
+
+classMap2:
+Mapping LOAD * Inline
+[
+val, display
+0, First quarter
+15, Second quarter
+30, Second half
+45, Second half
+]
+;
+
+Map StringClass using classMap2;
+
+
+hhmmMapped:
+LOAD
+		Value as Value3
+		,class(minute(Time),15)	as StringClass
+Resident Data
+;
