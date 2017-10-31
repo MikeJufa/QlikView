@@ -1,0 +1,81 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab New Line Map
+/*
+Map tapg that represent line breaks, such as "<br>" or "<p>".
+Also mapping of entities like &lt.
+If you want the Tag to be removed (replaced with nothing), do not specify a "To" value
+Specify the string to be mapped as To, following by an expression to map to.
+Not if you are mapping to a string, enclose the To string in ' (single quote) typed twice (escape syntax).
+*/
+
+TagToNewLineMap:
+Mapping LOAD
+		Tag
+		,if(len(trim(To))=0,'',Evaluate(To))
+Inline
+[
+Tag, To
+<br/>
+<br>
+<p>, chr(10) & chr(13)
+&lt;, ''<''
+&gt;, ''>''
+]
+;
+///$tab Strip HTML
+Results:
+LOAD
+		*
+		//The StripHtml function is written in the Module (Ctrl_m)
+		//The MapSubstring() is used to translate newline tags and entities.
+		,StripHtml(MapSubString('TagToNewLineMap', Raw))		as [Cleaned Content]
+Inline
+[
+Raw
+<strong>Hello World, <br>I am here.<strong> Gross sales &gt; 1 million.
+<div id="d1" class="view"><p>This is a my <strong>final</strong> answer<br/>Unless I change my mind</div><p>A new paragraph</p>
+](delimiter is '|')
+;
+
+
+
+//'
+//'Function to extract the InnerHtml text from Questions.
+//'Uses the VBScript RegExp Object.
+//'
+//Function StripHtml(astring)
+//	Set regEx = New RegExp 	'Create a regular expression object
+//	regEx.Global = true
+//	regEx.Pattern = "</?[a-z][a-z0-9]*[^<>]*>|<!--.*?-->" 'Set the pattern
+//	tempstr = regEx.Replace(astring,"")
+//	
+//	'We want to drop any leading CRLF
+//	if(left(tempstr,2)) = vbcrlf Then
+//		tempstr = mid(tempstr,3)
+//	End if
+//	StripHtml = tempstr 'Return value
+//End Function
+//
+//'
+//'Tester for the above
+//'
+//Sub testRegexTest
+//	msgbox StripHtml("<strong>Hello Wold</strong>")
+//End Sub

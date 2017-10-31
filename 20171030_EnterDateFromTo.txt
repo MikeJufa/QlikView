@@ -1,0 +1,39 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Test Data
+//generate Test Data from today - 24 months earlier
+LET tempEndDate = num(Today(1));
+LET tempStartDate = num(AddMonths($(tempEndDate),-24)) -1;
+
+DateMaster:
+LOAD
+		*
+		,month(Date)	as Month
+		,year(Date)		as Year
+		,num(rand() * 1000, '#0') as Sales
+		,date(MonthStart(Date),'MMM-YYYY') as YearMonth
+;
+LOAD
+	date($(tempStartDate) + IterNo(),'MM/DD/YYYY')	as Date
+AutoGenerate 1
+While $(tempStartDate) + IterNo() <= $(tempEndDate)
+;
+
+SET tempStartDate=;
+SET tempEndDate=;
