@@ -1,0 +1,33 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Main 2
+SET vDateMax = num(today());
+SET vDateMin = num(addmonths(Today(),-3));
+
+
+Data:
+LOAD
+		 date($(vDateMin)+IterNo(), 'MMM-DD-YYYY')			as Date
+		,day($(vDateMin)+IterNo())							as Day
+		,Year($(vDateMin)+IterNo())							as Year
+		,month($(vDateMin)+IterNo())						as Month
+		,date(MonthStart($(vDateMin)+IterNo()),'MMM-YY') 	as YearMonth
+		,floor(Rand()*100, 0.01)							as Sales
+AutoGenerate 1 While $(vDateMin)+IterNo() <= $(vDateMax)
+;

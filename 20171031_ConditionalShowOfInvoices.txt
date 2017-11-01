@@ -1,0 +1,33 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Main 2
+SET vOneOrder = '=GetPossibleCount(Order)=1';
+
+TestData:
+LOAD *
+Inline
+[
+Order, Customer, Address, Product, Amount, Qty, UnitPrice, DueDate, PO, AccountNumber
+SO67707, Kumar, 2489 Dianda Dr., Tire, 4.99, 1, 4.99, 12/31/2017, 7888, 10-4030
+SO67707, Kumar, 2489 Dianda Dr., Mountain Tire, 24.99, 1, 24.99, 12/31/2017,7888, 10-4030
+SO67707, Kumar, 2489 Dianda Dr., Classic Vest, 63.50, 1, 63.50, 12/31/2017, 7888, 10-4030
+SO67710, Watson, 2515 Live Oak, Road Tire, 32.60, 1, 32.60, 11/30/2017,7889, 10-4038
+SO67710, Watson, 2515 Live Oak, Mountain Tire, 249.9, 10, 24.99, 11/30/2017,7889, 10-4038
+]
+;

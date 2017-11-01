@@ -1,0 +1,33 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Main 2
+SET vShowDetail = 0;
+
+
+TestData:
+LOAD *
+Inline
+[
+DirInd, Job Description, Job, Original Budget, Approved Changes, Current Budget, % Progress EV, Earned Value, Incurred Cost, Cost Variance, % of FAC Progress, Committed Cost, Trend, Current Forecast, Change to Forecast
+Direct Cost, Base Caisson, WHBC01, 114907, 0, 114907, 167.32%, 3594, 2841, 753, 2.47%, 105, 383, 114907, 0
+Direct Cost, Base Caisson Testing, WHBF01, 588, 0, 588, 100%, 588, 662, -74, 112.60%, 0, 0, 588, 0
+Indirect Cost, Admin Fee, WHAE04, 4350, 200, 4550, -, 0,0,0, 0%, 0,0, 4550,0
+Indirect Cost, Corp Allowance, WHAE05, 85075, -6, 85069, -, 0,0,0, 0%, 0,0,85075,0
+]
+;
