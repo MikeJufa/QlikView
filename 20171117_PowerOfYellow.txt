@@ -1,0 +1,33 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET FirstWeekDay=6;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='en-US';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET LongMonthNames='January;February;March;April;May;June;July;August;September;October;November;December';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
+///$tab Data
+DataSet:
+LOAD
+		 1 as RowCount
+		,left('0' & Floor((Rand() * 10)+1)&'000',4) as [Customer Number]
+		,Right('0000'&RowNo(),4) as [Invoice Number]
+AutoGenerate (145)
+;
+
+LOAD
+		 1 as RowCount
+		,left('0' & Floor((Rand() * 10) + 1) & '000', 4) as [Customer Number]
+		,'-Pending-' as [Invoice Number]
+AutoGenerate (10)
+;
